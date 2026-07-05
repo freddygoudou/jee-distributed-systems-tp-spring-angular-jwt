@@ -1,0 +1,8 @@
+# Secrets / variables d'environnement
+.env
+*.env
+!.env.example
+
+# Secrets applicatifs
+**/secret.properties
+**/application-local.properties

@@ -1,0 +1,61 @@
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
+  <div class="container">
+    <a class="navbar-brand fw-bold" routerLink="/">
+      <i class="bi bi-bank2 me-2"></i>{{ title }}
+    </a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      @if (auth.isAuthenticated()) {
+        <ul class="navbar-nav me-auto">
+          <li class="nav-item">
+            <a class="nav-link" routerLink="/dashboard" routerLinkActive="active">
+              <i class="bi bi-graph-up-arrow me-1"></i>Dashboard
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" routerLink="/customers" routerLinkActive="active">
+              <i class="bi bi-people me-1"></i>Clients
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" routerLink="/accounts" routerLinkActive="active">
+              <i class="bi bi-wallet2 me-1"></i>Comptes
+            </a>
+          </li>
+        </ul>
+        <ul class="navbar-nav ms-auto align-items-lg-center">
+          <li class="nav-item">
+            <span class="navbar-text me-3">
+              <i class="bi bi-person-circle me-1"></i>{{ auth.username() }}
+              @if (auth.isAdmin()) {
+                <span class="badge bg-warning text-dark ms-1">ADMIN</span>
+              } @else {
+                <span class="badge bg-secondary ms-1">USER</span>
+              }
+            </span>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" routerLink="/change-password" routerLinkActive="active" title="Changer mon mot de passe">
+              <i class="bi bi-shield-lock"></i>
+            </a>
+          </li>
+          <li class="nav-item">
+            <button class="btn btn-outline-light btn-sm ms-2" (click)="logout()">
+              <i class="bi bi-box-arrow-right me-1"></i>Déconnexion
+            </button>
+          </li>
+        </ul>
+      }
+    </div>
+  </div>
+</nav>
+
+<main class="container py-4">
+  <router-outlet />
+</main>
+
+@if (auth.isAuthenticated()) {
+  <app-chat-widget />
+}

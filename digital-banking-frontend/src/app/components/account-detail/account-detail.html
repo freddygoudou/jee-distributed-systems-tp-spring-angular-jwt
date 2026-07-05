@@ -1,0 +1,121 @@
+<h3 class="mb-4"><i class="bi bi-receipt me-2"></i>Détail du compte</h3>
+
+@if (errorMsg()) { <div class="alert alert-danger">{{ errorMsg() }}</div> }
+@if (successMsg()) { <div class="alert alert-success">{{ successMsg() }}</div> }
+
+@if (account(); as a) {
+  <div class="card shadow-sm mb-4">
+    <div class="card-body row">
+      <div class="col-md-6">
+        <p class="mb-1 text-muted small">Identifiant</p>
+        <p class="mb-3"><code>{{ a.id }}</code></p>
+        <p class="mb-1 text-muted small">Client</p>
+        <p class="mb-0 fw-semibold">{{ a.customerDTO?.name }} <span class="text-muted">({{ a.customerDTO?.email }})</span></p>
+      </div>
+      <div class="col-md-6 text-md-end">
+        <p class="mb-1 text-muted small">Solde</p>
+        <h2 class="text-primary">{{ a.balance | number:'1.2-2' }} {{ a.currency }}</h2>
+        @if (a.type === 'CurrentAccount') {
+          <span class="badge bg-info-subtle text-info-emphasis">Compte courant · découvert {{ a.overDraft | number:'1.2-2' }}</span>
+        } @else {
+          <span class="badge bg-success-subtle text-success-emphasis">Compte épargne · taux {{ a.interestRate }}%</span>
+        }
+      </div>
+    </div>
+  </div>
+}
+
+<div class="row g-4">
+  <!-- Historique -->
+  <div [class]="auth.isAdmin() ? 'col-lg-8' : 'col-12'">
+    <div class="card shadow-sm">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-clock-history me-1"></i>Historique des opérations</span>
+        <button class="btn btn-sm btn-outline-secondary" (click)="refresh()"><i class="bi bi-arrow-clockwise"></i></button>
+      </div>
+      <div class="card-body">
+        @if (loading()) {
+          <div class="text-center py-4"><div class="spinner-border text-primary"></div></div>
+        } @else if (history(); as h) {
+          <div class="table-responsive">
+            <table class="table table-sm table-hover align-middle mb-0">
+              <thead class="table-light">
+                <tr><th>ID</th><th>Date</th><th>Type</th><th class="text-end">Montant</th><th>Description</th></tr>
+              </thead>
+              <tbody>
+                @for (o of h.accountOperationDTOS; track o.id) {
+                  <tr>
+                    <td>{{ o.id }}</td>
+                    <td>{{ o.operationDate | date:'dd/MM/yyyy HH:mm' }}</td>
+                    <td>
+                      @if (o.type === 'CREDIT') {
+                        <span class="badge bg-success">CREDIT</span>
+                      } @else {
+                        <span class="badge bg-danger">DEBIT</span>
+                      }
+                    </td>
+                    <td class="text-end fw-semibold">{{ o.amount | number:'1.2-2' }}</td>
+                    <td class="text-muted small">{{ o.description }}</td>
+                  </tr>
+                } @empty {
+                  <tr><td colspan="5" class="text-center text-muted py-3">Aucune opération.</td></tr>
+                }
+              </tbody>
+            </table>
+          </div>
+
+          @if (pages().length > 1) {
+            <nav class="mt-3">
+              <ul class="pagination pagination-sm justify-content-center mb-0">
+                @for (p of pages(); track p) {
+                  <li class="page-item" [class.active]="p === page()">
+                    <button class="page-link" (click)="loadHistory(p)">{{ p + 1 }}</button>
+                  </li>
+                }
+              </ul>
+            </nav>
+          }
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- Opérations (ADMIN uniquement) -->
+  @if (auth.isAdmin()) {
+  <div class="col-lg-4">
+    <div class="card shadow-sm">
+      <div class="card-header bg-primary text-white">Nouvelle opération</div>
+      <div class="card-body">
+        <form (ngSubmit)="submitOperation()" #f="ngForm">
+          <div class="mb-3">
+            <label class="form-label">Type</label>
+            <select class="form-select" [(ngModel)]="operationType" name="operationType">
+              <option value="CREDIT">Crédit (versement)</option>
+              <option value="DEBIT">Débit (retrait)</option>
+              <option value="TRANSFER">Virement</option>
+            </select>
+          </div>
+          @if (operationType === 'TRANSFER') {
+            <div class="mb-3">
+              <label class="form-label">Compte destination</label>
+              <input class="form-control" [(ngModel)]="op.accountDestination" name="accountDestination" required
+                     placeholder="ID du compte">
+            </div>
+          }
+          <div class="mb-3">
+            <label class="form-label">Montant</label>
+            <input type="number" min="1" step="0.01" class="form-control" [(ngModel)]="op.amount" name="amount" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Description</label>
+            <input class="form-control" [(ngModel)]="op.description" name="description">
+          </div>
+          <button class="btn btn-success w-100" type="submit" [disabled]="f.invalid || processing()">
+            <i class="bi bi-send me-1"></i>Valider
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+  }
+</div>

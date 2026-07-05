@@ -1,0 +1,28 @@
+@if (open()) {
+  <div class="chat-panel card shadow">
+    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center py-2">
+      <span><i class="bi bi-robot me-2"></i>Assistant Digital Banking</span>
+      <button class="btn btn-sm btn-link text-white p-0" (click)="toggle()"><i class="bi bi-x-lg"></i></button>
+    </div>
+    <div class="chat-body">
+      @for (m of messages(); track $index) {
+        <div class="chat-msg" [class.user]="m.from === 'user'" [class.bot]="m.from === 'bot'">
+          <div class="bubble">{{ m.text }}</div>
+        </div>
+      }
+      @if (loading()) {
+        <div class="chat-msg bot">
+          <div class="bubble"><span class="spinner-border spinner-border-sm"></span> …</div>
+        </div>
+      }
+    </div>
+    <form class="chat-input input-group" (ngSubmit)="send()">
+      <input class="form-control" placeholder="Votre question..." [(ngModel)]="input" name="input" autocomplete="off">
+      <button class="btn btn-primary" type="submit" [disabled]="loading()"><i class="bi bi-send"></i></button>
+    </form>
+  </div>
+}
+
+<button class="chat-fab btn btn-primary rounded-circle shadow" (click)="toggle()" title="Assistant">
+  <i class="bi" [class.bi-chat-dots-fill]="!open()" [class.bi-x-lg]="open()"></i>
+</button>

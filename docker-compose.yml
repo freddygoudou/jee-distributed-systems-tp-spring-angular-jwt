@@ -1,0 +1,58 @@
+name: digital-banking
+
+services:
+  # ---------- Base de données PostgreSQL ----------
+  postgres:
+    image: postgres:18-alpine
+    container_name: db-postgres
+    environment:
+      POSTGRES_DB: tp_spring_angular_jwt
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: root
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      # 5433 sur l'hôte pour ne pas entrer en conflit avec un PostgreSQL local sur 5432
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d tp_spring_angular_jwt"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # ---------- Backend Spring Boot ----------
+  backend:
+    build: ./digital-banking
+    container_name: db-backend
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/tp_spring_angular_jwt
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: root
+      # Clé OpenAI et Telegram fournies via le fichier .env à la racine (voir .env.example)
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      TELEGRAM_ENABLED: ${TELEGRAM_ENABLED:-false}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      TELEGRAM_BOT_USERNAME: ${TELEGRAM_BOT_USERNAME:-}
+    ports:
+      - "8085:8085"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8085/v3/api-docs >/dev/null 2>&1 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 40s
+
+  # ---------- Frontend Angular (nginx) ----------
+  frontend:
+    build: ./digital-banking-frontend
+    container_name: db-frontend
+    depends_on:
+      - backend
+    ports:
+      - "8033:80"
+
+volumes:
+  pgdata:

@@ -1,0 +1,101 @@
+<h3 class="mb-4"><i class="bi bi-wallet2 me-2"></i>Gestion des comptes</h3>
+
+@if (errorMsg()) {
+  <div class="alert alert-danger">{{ errorMsg() }}</div>
+}
+
+<div class="row g-4">
+  <!-- Liste des comptes -->
+  <div [class]="auth.isAdmin() ? 'col-lg-8' : 'col-12'">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        @if (loading()) {
+          <div class="text-center py-4"><div class="spinner-border text-primary"></div></div>
+        } @else {
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+              <thead class="table-light">
+                <tr><th>ID</th><th>Type</th><th>Client</th><th class="text-end">Solde</th><th>Statut</th><th></th></tr>
+              </thead>
+              <tbody>
+                @for (a of accounts(); track a.id) {
+                  <tr>
+                    <td><code>{{ a.id.substring(0, 8) }}…</code></td>
+                    <td>
+                      @if (a.type === 'CurrentAccount') {
+                        <span class="badge bg-info-subtle text-info-emphasis">Courant</span>
+                      } @else {
+                        <span class="badge bg-success-subtle text-success-emphasis">Épargne</span>
+                      }
+                    </td>
+                    <td>{{ a.customerDTO?.name }}</td>
+                    <td class="text-end fw-semibold">{{ a.balance | number:'1.2-2' }} {{ a.currency }}</td>
+                    <td><span class="badge bg-secondary">{{ a.status }}</span></td>
+                    <td class="text-end">
+                      <a class="btn btn-sm btn-outline-primary" [routerLink]="['/accounts', a.id]" title="Détails / opérations">
+                        <i class="bi bi-eye"></i>
+                      </a>
+                    </td>
+                  </tr>
+                } @empty {
+                  <tr><td colspan="6" class="text-center text-muted py-3">Aucun compte.</td></tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- Création de compte (ADMIN uniquement) -->
+  @if (auth.isAdmin()) {
+  <div class="col-lg-4">
+    <div class="card shadow-sm">
+      <div class="card-header bg-primary text-white">Nouveau compte</div>
+      <div class="card-body">
+        <form (ngSubmit)="save()" #f="ngForm">
+          <div class="mb-3">
+            <label class="form-label">Type de compte</label>
+            <select class="form-select" [(ngModel)]="accountType" name="accountType">
+              <option value="current">Compte courant</option>
+              <option value="saving">Compte épargne</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Client</label>
+            <select class="form-select" [(ngModel)]="form.customerId" name="customerId" required>
+              <option [ngValue]="null" disabled>-- Choisir --</option>
+              @for (c of customers(); track c.id) {
+                <option [ngValue]="c.id">{{ c.name }}</option>
+              }
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Solde initial</label>
+            <input type="number" min="0" class="form-control" [(ngModel)]="form.initialBalance" name="initialBalance" required>
+          </div>
+          @if (accountType === 'current') {
+            <div class="mb-3">
+              <label class="form-label">Découvert autorisé</label>
+              <input type="number" min="0" class="form-control" [(ngModel)]="form.overDraft" name="overDraft">
+            </div>
+          } @else {
+            <div class="mb-3">
+              <label class="form-label">Taux d'intérêt (%)</label>
+              <input type="number" min="0" step="0.1" class="form-control" [(ngModel)]="form.interestRate" name="interestRate">
+            </div>
+          }
+          <div class="mb-3">
+            <label class="form-label">Devise</label>
+            <input class="form-control" [(ngModel)]="form.currency" name="currency">
+          </div>
+          <button class="btn btn-success w-100" type="submit" [disabled]="f.invalid || saving()">
+            <i class="bi bi-plus-lg me-1"></i>Créer le compte
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+  }
+</div>

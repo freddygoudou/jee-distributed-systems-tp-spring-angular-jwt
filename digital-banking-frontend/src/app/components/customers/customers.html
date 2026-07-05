@@ -1,0 +1,92 @@
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h3 class="mb-0"><i class="bi bi-people me-2"></i>Gestion des clients</h3>
+</div>
+
+@if (errorMsg()) {
+  <div class="alert alert-danger">{{ errorMsg() }}</div>
+}
+
+<div class="row g-4">
+  <!-- Liste -->
+  <div [class]="auth.isAdmin() ? 'col-lg-8' : 'col-12'">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <form class="input-group mb-3" (ngSubmit)="load()">
+          <input class="form-control" placeholder="Rechercher par nom..."
+                 [(ngModel)]="keyword" name="keyword">
+          <button class="btn btn-primary" type="submit"><i class="bi bi-search"></i></button>
+          @if (keyword) {
+            <button class="btn btn-outline-secondary" type="button" (click)="keyword=''; load()">Réinitialiser</button>
+          }
+        </form>
+
+        @if (loading()) {
+          <div class="text-center py-4"><div class="spinner-border text-primary"></div></div>
+        } @else {
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+              <thead class="table-light">
+                <tr><th>ID</th><th>Nom</th><th>Email</th><th class="text-end">Actions</th></tr>
+              </thead>
+              <tbody>
+                @for (c of customers(); track c.id) {
+                  <tr>
+                    <td>{{ c.id }}</td>
+                    <td class="fw-semibold">{{ c.name }}</td>
+                    <td>{{ c.email }}</td>
+                    <td class="text-end">
+                      <a class="btn btn-sm btn-outline-info me-1" [routerLink]="['/customers', c.id, 'accounts']" title="Comptes">
+                        <i class="bi bi-wallet2"></i>
+                      </a>
+                      @if (auth.isAdmin()) {
+                        <button class="btn btn-sm btn-outline-primary me-1" (click)="editCustomer(c)" title="Modifier">
+                          <i class="bi bi-pencil"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger" (click)="remove(c)" title="Supprimer">
+                          <i class="bi bi-trash"></i>
+                        </button>
+                      }
+                    </td>
+                  </tr>
+                } @empty {
+                  <tr><td colspan="4" class="text-center text-muted py-3">Aucun client.</td></tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- Formulaire (ADMIN uniquement) -->
+  @if (auth.isAdmin()) {
+  <div class="col-lg-4">
+    <div class="card shadow-sm">
+      <div class="card-header bg-primary text-white">
+        {{ editing() ? 'Modifier le client' : 'Nouveau client' }}
+      </div>
+      <div class="card-body">
+        <form (ngSubmit)="save()" #f="ngForm">
+          <div class="mb-3">
+            <label class="form-label">Nom</label>
+            <input class="form-control" [(ngModel)]="form.name" name="name" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Email</label>
+            <input type="email" class="form-control" [(ngModel)]="form.email" name="email" required email>
+          </div>
+          <div class="d-flex gap-2">
+            <button class="btn btn-success" type="submit" [disabled]="f.invalid || saving()">
+              <i class="bi bi-check-lg me-1"></i>{{ editing() ? 'Mettre à jour' : 'Enregistrer' }}
+            </button>
+            @if (editing()) {
+              <button class="btn btn-outline-secondary" type="button" (click)="newCustomer()">Annuler</button>
+            }
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  }
+</div>
